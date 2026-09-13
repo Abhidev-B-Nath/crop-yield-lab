@@ -62,7 +62,7 @@ def build_pipeline(
     model = RandomForestRegressor(
         n_estimators=100,
         random_state=RANDOM_STATE,
-        n_jobs=-1,
+        n_jobs=1,
     )
     return Pipeline(steps=[("preprocessor", preprocessor), ("model", model)])
 

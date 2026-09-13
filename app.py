@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -13,8 +14,8 @@ import pandas as pd
 
 from crop_yield_model import load_and_clean_data, train_model
 
-HOST = "127.0.0.1"
-PORT = 8000
+HOST = os.environ.get("HOST", "0.0.0.0")
+PORT = int(os.environ.get("PORT", "8000"))
 ROOT = Path(__file__).parent
 DATASET = ROOT / "crop_yield.csv"
 STATIC_FILE = ROOT / "index.html"
