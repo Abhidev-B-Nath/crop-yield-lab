@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Crop Yield Lab</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;600;700;800&display=swap');
+    :root { --ink:#17251f; --muted:#68776d; --paper:#f4f1e9; --panel:#fffdf7; --line:#d9dfd5; --leaf:#2e6b4d; --lime:#c8df74; --rust:#b65d3c; --shadow:0 18px 50px #24392b14; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:radial-gradient(circle at 8% 0%, #dbe8ba 0, transparent 28%), linear-gradient(135deg,#f4f1e9 0%,#e8eee0 100%); font-family:Manrope, sans-serif; min-height:100vh; }
+    .shell { max-width:1220px; margin:auto; padding:28px 24px 54px; }
+    header { display:flex; align-items:flex-end; justify-content:space-between; gap:24px; margin-bottom:30px; }
+    .eyebrow { color:var(--leaf); font:500 12px 'DM Mono',monospace; letter-spacing:1.8px; text-transform:uppercase; }
+    h1 { font-size:clamp(38px,6vw,72px); line-height:.98; letter-spacing:-3px; margin:10px 0 12px; max-width:700px; }
+    .intro { color:var(--muted); max-width:590px; line-height:1.6; margin:0; }
+    .status { background:var(--ink); color:#eff3e5; padding:12px 15px; border-radius:5px; white-space:nowrap; font:500 12px 'DM Mono',monospace; }
+    .status::before { content:'●'; color:var(--lime); margin-right:8px; }
+    .layout { display:grid; grid-template-columns:minmax(0,1.5fr) minmax(300px,.8fr); gap:20px; align-items:start; }
+    .panel { background:color-mix(in srgb,var(--panel) 92%,transparent); border:1px solid var(--line); box-shadow:var(--shadow); border-radius:8px; }
+    .form-panel { padding:26px; }
+    .panel-head { display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px solid var(--line); padding-bottom:18px; margin-bottom:22px; }
+    h2 { font-size:18px; margin:0; letter-spacing:-.4px; } .mono { font:12px 'DM Mono',monospace; color:var(--muted); }
+    .fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:17px 14px; }
+    label { display:grid; gap:7px; font-size:12px; font-weight:700; color:#405046; }
+    input, select { width:100%; border:1px solid #cfd8cb; background:#fbfcf7; color:var(--ink); border-radius:4px; padding:12px 11px; font:14px 'DM Mono',monospace; outline:none; transition:border .2s, box-shadow .2s; }
+    input:focus, select:focus { border-color:var(--leaf); box-shadow:0 0 0 3px #2e6b4d1c; }
+    .actions { display:flex; gap:10px; margin-top:24px; align-items:center; }
+    button { border:0; border-radius:4px; cursor:pointer; padding:13px 17px; font:700 13px Manrope,sans-serif; }
+    .primary { background:var(--leaf); color:white; flex:1; } .primary:hover { background:#24543c; }
+    .secondary { color:var(--ink); background:#e6eadf; } .secondary:hover { background:#d8e1cf; }
+    button:disabled { opacity:.6; cursor:wait; }
+    .rail { display:grid; gap:20px; }
+    .result { min-height:220px; padding:25px; background:var(--ink); color:#f4f6e9; position:relative; overflow:hidden; }
+    .result:after { content:''; width:180px; height:180px; border:1px solid #c8df7448; border-radius:50%; position:absolute; right:-52px; bottom:-65px; box-shadow:0 0 0 28px #c8df7410,0 0 0 56px #c8df7408; }
+    .result .eyebrow { color:var(--lime); } .yield { font-size:52px; letter-spacing:-2px; margin:24px 0 6px; position:relative; z-index:1; } .unit { color:#b8c7b7; font-size:13px; }
+    .metric-panel { padding:22px; } .metric-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line); margin-top:17px; border:1px solid var(--line); }
+    .metric { background:var(--panel); padding:14px; } .metric strong { display:block; margin-top:6px; font:500 20px 'DM Mono',monospace; }
+    .note { color:var(--muted); font-size:12px; line-height:1.6; margin:17px 0 0; }
+    .toast { min-height:18px; color:var(--rust); font-size:12px; margin:12px 0 0; }
+    @media (max-width:780px) { .shell{padding:22px 15px 40px} header{display:block} .status{display:inline-block;margin-top:20px} .layout{grid-template-columns:1fr} .fields{grid-template-columns:1fr} h1{letter-spacing:-2px} }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div><div class="eyebrow">Agriculture / Regression Lab</div><h1>Read the field.<br><em>Predict the harvest.</em></h1><p class="intro">A hands-on interface for the crop yield model. Enter a new field profile and send it through the same preprocessing pipeline used during training.</p></div>
+      <div class="status" id="status">Loading model</div>
+    </header>
+    <section class="layout">
+      <form class="panel form-panel" id="predict-form">
+        <div class="panel-head"><h2>New field profile</h2><span class="mono">UNSEEN SAMPLE</span></div>
+        <div class="fields" id="fields"></div>
+        <div class="actions"><button class="primary" type="submit" id="predict-button">Predict yield <span>↗</span></button><button class="secondary" type="button" id="reset-button">Reset</button></div>
+        <div class="toast" id="error" role="alert"></div>
+      </form>
+      <aside class="rail">
+        <section class="panel result"><div class="eyebrow">Model output</div><div class="yield" id="prediction">—</div><div class="unit">tonnes per hectare</div></section>
+        <section class="panel metric-panel"><div class="panel-head"><h2>Held-out performance</h2><span class="mono" id="split">80 / 20</span></div><div class="metric-grid" id="metrics"></div><p class="note">Random Forest · 100 trees · median and most-frequent imputation · one-hot encoding</p></section>
+      </aside>
+    </section>
+  </main>
+  <script>
+    const numericDefaults = {"Area":12.5,"Rainfall":240,"Temperature":27.5,"Humidity":70,"Soil pH":6.8,"Nitrogen":110,"Phosphorus":55,"Potassium":80,"Fertilizer":150,"Pesticide":12};
+    const labels = {"Soil pH":"Soil pH"};
+    const fields = document.querySelector('#fields');
+    const error = document.querySelector('#error');
+    const prediction = document.querySelector('#prediction');
+    const button = document.querySelector('#predict-button');
+    let schema;
+    function title(name) { return labels[name] || name; }
+    function renderFields() {
+      fields.innerHTML = schema.features.map(feature => {
+        if (schema.categorical_features.includes(feature)) {
+          const options = schema.category_options[feature].map(value => `<option value="${value}">${value}</option>`).join('');
+          return `<label>${title(feature)}<select name="${feature}" required>${options}</select></label>`;
+        }
+        return `<label>${title(feature)}<input name="${feature}" type="number" step="any" value="${numericDefaults[feature] ?? ''}" required></label>`;
+      }).join('');
+    }
+    function readSample() {
+      return Object.fromEntries([...new FormData(document.querySelector('#predict-form')).entries()]);
+    }
+    async function boot() {
+      const response = await fetch('/api/status'); schema = await response.json(); renderFields();
+      document.querySelector('#status').textContent = `${schema.training_samples} training rows ready`;
+      document.querySelector('#split').textContent = `${schema.training_samples} / ${schema.testing_samples}`;
+      document.querySelector('#metrics').innerHTML = Object.entries(schema.metrics).map(([name,value]) => `<div class="metric"><span class="mono">${name}</span><strong>${Number(value).toFixed(3)}</strong></div>`).join('');
+    }
+    document.querySelector('#predict-form').addEventListener('submit', async event => {
+      event.preventDefault(); error.textContent = ''; button.disabled = true; button.textContent = 'Scoring sample...';
+      try { const response = await fetch('/api/predict', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(readSample())}); const data = await response.json(); if (!response.ok) throw new Error(data.error); prediction.textContent = Number(data.prediction).toFixed(2); }
+      catch (err) { error.textContent = err.message; prediction.textContent = '—'; }
+      finally { button.disabled = false; button.innerHTML = 'Predict yield <span>↗</span>'; }
+    });
+    document.querySelector('#reset-button').addEventListener('click', () => { document.querySelector('#predict-form').reset(); prediction.textContent = '—'; error.textContent = ''; });
+    boot().catch(() => { document.querySelector('#status').textContent = 'Model unavailable'; error.textContent = 'Could not load the trained model.'; });
+  </script>
+</body>
+</html>

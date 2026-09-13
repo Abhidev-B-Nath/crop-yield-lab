@@ -1,0 +1,15 @@
+{
+  "Crop": "Rice",
+  "State": "Punjab",
+  "Season": "Kharif",
+  "Area": 12.5,
+  "Rainfall": 240,
+  "Temperature": 27.5,
+  "Humidity": 70,
+  "Soil pH": 6.8,
+  "Nitrogen": 110,
+  "Phosphorus": 55,
+  "Potassium": 80,
+  "Fertilizer": 150,
+  "Pesticide": 12
+}
