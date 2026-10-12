@@ -1,4 +1,11 @@
-# Crop Yield Prediction
+# 🌾 Crop Yield Prediction
+
+### 🚀 Live Demo
+
+**Try the application here:**  
+[Crop Yield Lab — Live Website](https://crop-yield-lab.onrender.com)
+
+---
 
 This project implements the crop yield regression workflow shown in `ml.ppt.pptx`.
 
@@ -57,12 +64,3 @@ python crop_yield_model.py crop_yield.csv --values-file unseen_sample.json
 
 The preprocessing is fitted only on the training data and is reused for the test set and new sample, so missing-value handling and one-hot encoding stay consistent with the PPT workflow.
 
-## Run the web app
-
-Start the local demonstration app with:
-
-```powershell
-.\.venv\Scripts\python.exe .\app.py
-```
-
-Open http://127.0.0.1:8000 in a browser. The form loads the feature schema from the trained model, shows the held-out metrics, and sends each manually entered unseen sample through the fitted pipeline.
